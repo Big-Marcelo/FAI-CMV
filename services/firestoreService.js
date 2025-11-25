@@ -5,14 +5,32 @@ if (!process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
   throw new Error("FIREBASE_SERVICE_ACCOUNT_BASE64 não definida.");
 }
 
-const serviceAccountJson = Buffer.from(
-  process.env.FIREBASE_SERVICE_ACCOUNT_BASE64,
-  "base64"
-).toString("utf8");
+let decoded;
+try {
+  decoded = Buffer.from(
+    process.env.FIREBASE_SERVICE_ACCOUNT_BASE64,
+    "base64"
+  ).toString("utf8");
+} catch (err) {
+  console.error("Erro ao decodificar o Base64:", err);
+  throw err;
+}
+
+console.log("Decoded service account JSON:", decoded);
+
+let credentials;
+try {
+  credentials = JSON.parse(decoded);
+} catch (err) {
+  console.error("Decoded não é JSON válido:", err);
+  throw new Error("FIREBASE_SERVICE_ACCOUNT_BASE64 decodificado não é JSON válido");
+}
+
+console.log("Parsed credentials:", credentials);
 
 if (!admin.apps.length) {
   admin.initializeApp({
-    credential: admin.credential.cert(JSON.parse(serviceAccountJson)),
+    credential: admin.credential.cert(credentials),
   });
 }
 
